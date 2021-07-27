@@ -5,6 +5,8 @@ import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.Topology
+import org.apache.kafka.streams.kstream.Consumed
+import org.apache.kafka.streams.kstream.Produced
 import java.util.*
 
 object Streamer {
@@ -16,6 +18,16 @@ object Streamer {
     fun forwardTopology(from: String, to: String): Topology {
         val builder = StreamsBuilder()
         builder.stream<String, String>(from).to(to)
+        return builder.build()
+    }
+
+    fun aggregateTopology(from: String, to: String): Topology {
+        val builder = StreamsBuilder()
+        builder.stream<String, String>(from)
+            .groupBy { _, value -> value }
+            .count()
+            .toStream()
+            .to(to, Produced.with(Serdes.String(), Serdes.Long()))
         return builder.build()
     }
 
